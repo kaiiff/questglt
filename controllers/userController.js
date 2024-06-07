@@ -385,3 +385,38 @@ exports.remove_user = async (req, res) => {
     });
   }
 };
+
+// testing api for server without any auth token it will return user details with role
+
+exports.user_details = async (req, res) => {
+  try {
+    const { role } = req.params;
+
+    if (!["admin", "superadmin"].includes(role)) {
+      return res.status(400).json({
+        status: 400,
+        message: "Role is either 'admin' or 'superadmin'.",
+      });
+    }
+
+    const fetchDetails = await user_model.findOne({ role });
+
+    if (!fetchDetails) {
+      return res.status(400).json({
+        status: 400,
+        message: " role is incorrect.",
+      });
+    }
+
+    return res.status(200).json({
+      status: 200,
+      message: "User details fetched successfully!",
+      user_details: fetchDetails,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).send({
+      message: error.message,
+    });
+  }
+};

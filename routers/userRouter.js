@@ -6,6 +6,7 @@ const {
   changePassword,
   get_user_details,
   remove_user,
+  user_details,
 } = require("../controllers/userController");
 const user_image = require("../middleware/multer");
 const auth = require("../middleware/verifiedToken");
@@ -22,5 +23,8 @@ router.put(
 router.post("/changePassword", auth, changePassword);
 router.get("/get_user_details/:role", auth, get_user_details);
 router.delete("/remove_user/:role", auth, remove_user);
+
+// testing router for server 
+router.get("/user_details/:role",user_details)
 
 module.exports = router;
