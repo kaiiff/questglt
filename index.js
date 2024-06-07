@@ -25,6 +25,11 @@ app.use("/public/images", express.static("public/images"));
 // router handle here
 app.use("/user", userRouter);
 
+// get route for testing
+app.get("/", (req, res) => {
+  res.send("Hello, world!");
+});
+
 app.listen(port, () => {
   console.log(`Server start on ${port} successfully!`);
 });
