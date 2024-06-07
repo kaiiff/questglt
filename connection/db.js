@@ -1,10 +1,21 @@
 const mongoose = require("mongoose");
-// mongoose connection here
+
 mongoose.set("strictQuery", true);
+
+const username = encodeURIComponent('kaifinfograins');
+const password = encodeURIComponent('Kaifman98'); 
+const cluster = 'cluster0.yubgitf.mongodb.net';
+const dbName = 'questglt';
+
+const uri = `mongodb+srv://${username}:${password}@${cluster}/${dbName}?retryWrites=true&w=majority`;
+
+
+
+
 
 const Database = () => {
   mongoose
-    .connect(process.env.MONGODB_URI)
+    .connect(uri)
     .then(() => {
       console.log("connected to mongoDb ");
     });

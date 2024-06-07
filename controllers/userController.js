@@ -118,7 +118,7 @@ exports.user_login = async (req, res) => {
       }),
       role: Joi.string().valid("admin", "superadmin").required().messages({
         "string.empty": "Role is a required field.",
-        "any.only": "Role must be either 'admin' or 'superadmin'.",
+        "any.only": "Role is either 'admin' or 'superadmin'.",
       }),
     });
 
@@ -167,44 +167,70 @@ exports.user_login = async (req, res) => {
 exports.update_user_profile = async (req, res) => {
   try {
     const id = req.user;
-    console.log("id ===>>>", id);
     const { file } = req;
     const { userName, phone } = req.body;
 
+    // Joi schema for validation
+    const schema = Joi.object({
+      userName: Joi.string().required().messages({
+        "string.empty": "userName is a required field.",
+      }),
+      phone: Joi.number()
+        .integer()
+        .min(1000000000)
+        .max(9999999999)
+        .required()
+        .messages({
+          "number.base": "Phone number must be a number.",
+          "number.integer": "Phone number must be an integer.",
+          "number.min": "Phone number must be a 10-digit number.",
+          "number.max": "Phone number must be a 10-digit number.",
+        }),
+    });
+
+    const validation = schema.validate({ userName, phone });
+
+    if (validation.error) {
+      return res.status(422).send({
+        status: 422,
+        message: validation.error.details.map((detail) => detail.message),
+      });
+    }
+
     let image;
-    if (req.file) {
+    if (file) {
       image = process.env.BASE_URL + file.filename;
     }
 
-    let recodeData = {};
-    if (req.file) {
-      recodeData = {
-        userName: userName,
-        phone: phone,
-        image: image,
-      };
-    } else {
-      recodeData = {
-        userName: userName,
-        phone: phone,
-      };
+    let recodeData = {
+      userName,
+      phone,
+    };
+    if (image) {
+      recodeData.image = image;
     }
 
-    await user_model.findOneAndUpdate(
+    // Update the user profile
+    const updatedUser = await user_model.findOneAndUpdate(
       { _id: id },
       { $set: recodeData },
       { new: true }
     );
 
-    console.log("recodeData ===>>>", recodeData);
+    if (!updatedUser) {
+      return res.status(404).json({
+        status: 404,
+        message: "User not found.",
+      });
+    }
 
-    const adminUpdate = await user_model.findOne({ _id: id });
-    console.log("adminUpdate ===>>>", adminUpdate);
-
-    return res
-      .status(200)
-      .json({ status: 200, message: "Admin Update Successfully", adminUpdate });
+    return res.status(200).json({
+      status: 200,
+      message: "User profile updated successfully.",
+      user_details: updatedUser,
+    });
   } catch (error) {
+    console.error(error);
     return res.status(500).send({
       message: error.message,
     });
@@ -331,7 +357,6 @@ exports.remove_user = async (req, res) => {
     const id = req.user;
     const { role } = req.params;
 
-    
     if (!["admin", "superadmin"].includes(role)) {
       return res.status(400).json({
         status: 400,
@@ -339,7 +364,6 @@ exports.remove_user = async (req, res) => {
       });
     }
 
-    
     const user = await user_model.findOne({ _id: id, role });
     if (!user) {
       return res.status(404).json({
@@ -348,7 +372,6 @@ exports.remove_user = async (req, res) => {
       });
     }
 
-   
     await user_model.deleteOne({ _id: id, role });
 
     return res.status(200).json({
